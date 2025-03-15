@@ -179,15 +179,25 @@ void Plane::autotune_enable(bool enable)
  */
 bool Plane::fly_inverted(void)
 {
+    bool ret = false;
+    static bool last_ret = false;
+
     if (control_mode == &plane.mode_manual) {
-        return false;
+        ret = false;
     }
     if (inverted_flight) {
         // controlled with aux switch
-        return true;
+        ret = true;
     }
     if (control_mode == &mode_auto && auto_state.inverted_flight) {
-        return true;
+        ret = true;
     }
-    return false;
+
+    if (ret != last_ret) {
+        gcs().send_text(MAV_SEVERITY_INFO, "Inverted flight %s", ret ? "enabled" : "disabled");
+        plane.pitchController.reset_I();
+    }
+
+    last_ret = ret;
+    return ret;
 }
